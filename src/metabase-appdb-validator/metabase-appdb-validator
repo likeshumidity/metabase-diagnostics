@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Metabase Application Database Validator
+# Wrapper script for Clojure CLI execution
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Check if clojure CLI is available
+if ! command -v clojure &> /dev/null; then
+    echo "❌ Clojure CLI not found. Please install Clojure CLI tools."
+    echo "   https://clojure.org/guides/install_clojure"
+    exit 1
+fi
+
+# Execute the Clojure application
+exec clojure -M -m metabase-appdb-validator.core "$@"
