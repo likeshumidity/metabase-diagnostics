@@ -70,16 +70,14 @@
   [client]
   (log/info "Checking databases access...")
   (try
-    (let [databases (api/get-databases client)
+    (let [databases (:data (api/get-databases client))
           database-count (count databases)
-          accessible-dbs (filter #(not (:is_saved_questions %)) databases)]
+          db-selected-keys [:id :name :engine]]
       {:test "databases-access"
        :status "pass"
-       :details (str "Found " database-count " databases, "
-                    (count accessible-dbs) " accessible")
+       :details (str "Found " database-count " databases.")
        :database-count database-count
-       :accessible-count (count accessible-dbs)
-       :databases (map #(select-keys % [:id :name :engine :is_saved_questions]) databases)})
+       :databases (map #(select-keys % db-selected-keys) databases)})
     (catch Exception e
       {:test "databases-access"
        :status "fail"

@@ -41,7 +41,7 @@
   [client-state method path & {:keys [query-params form-params json-params headers]}]
   (let [{:keys [base-url api-key timeout]} @client-state
         url (str base-url path)
-        request-headers (merge {"X-API-Key" api-key}
+        request-headers (merge {"x-api-key" api-key}
                                headers)
         request-options {:headers request-headers
                          :accept :json
