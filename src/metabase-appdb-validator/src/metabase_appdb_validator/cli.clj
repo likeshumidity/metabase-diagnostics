@@ -40,7 +40,7 @@
 
    ;; Output options
    [nil "--output FILE" "Output CSV file"
-    :default "metabase-validation-results.csv"]
+    :default "metabase-validation-results-TIMESTAMP.csv"]
 
    ;; Config file option
    [nil "--config FILE" "Configuration file (EDN format)"]])

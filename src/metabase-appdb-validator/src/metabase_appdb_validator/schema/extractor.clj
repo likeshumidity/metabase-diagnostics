@@ -8,6 +8,8 @@
             [metabase-appdb-validator.schema.liquibase-migrations :as liquibase]
             [metabase-appdb-validator.schema.sql-init-scripts :as sql-init]))
 
+(def METABASE-VERSION-PATTERN #"^v(\d+)\.(\d+)\.(\d+)\.(\d+)$")
+
 (defn get-git-tags
   "Get all git tags from Metabase repository"
   [repo-path]
@@ -16,29 +18,30 @@
       (str/split-lines (:out result)))))
 
 (defn filter-major-versions
-  "Filter tags to get major version initials (x.y.0) and latest patches"
+  "Filter tags to get major version initials (license.major.minor.0) and latest patches"
   [tags]
-  (let [version-pattern #"^v(\d+)\.(\d+)\.(\d+)$"
+  (let [version-pattern METABASE-VERSION-PATTERN
         parse-version (fn [tag]
                         (when-let [match (re-matches version-pattern tag)]
                           {:tag tag
-                           :major (Integer/parseInt (nth match 1))
-                           :minor (Integer/parseInt (nth match 2))
-                           :patch (Integer/parseInt (nth match 3))}))
+                           :license (Integer/parseInt (nth match 1))
+                           :major (Integer/parseInt (nth match 2))
+                           :minor (Integer/parseInt (nth match 3))
+                           :patch (Integer/parseInt (nth match 4))}))
 
         parsed-versions (->> tags
                             (map parse-version)
                             (filter some?)
-                            (sort-by (juxt :major :minor :patch)))
+                            (sort-by (juxt :license :major :minor :patch)))
 
-        ;; Get major version initials (x.y.0)
+        ;; Get major version initials (license.major.minor.0)
         major-initials (->> parsed-versions
                            (filter #(= 0 (:patch %)))
                            (map :tag))
 
-        ;; Get latest patch for each major.minor
+        ;; Get latest patch for each license.major.minor
         latest-patches (->> parsed-versions
-                           (group-by (juxt :major :minor))
+                           (group-by (juxt :license :major :minor))
                            (map (fn [[_ versions]]
                                   (->> versions
                                        (sort-by :patch)
@@ -50,9 +53,12 @@
 (defn list-supported-versions
   "List all supported Metabase versions for schema extraction"
   [repo-path]
-  (let [all-tags (get-git-tags repo-path)
-        version-tags (filter #(re-matches #"^v\d+\.\d+\.\d+$" %) all-tags)]
-    (filter-major-versions version-tags)))
+  (let [all-tags (get-git-tags repo-path)]
+    ;; Return all version tags that start with v0 or v1 and end with a digit
+    ;; This matches the same logic as the list-versions command
+    (->> all-tags
+         (filter #(re-matches #"^v[01].*\d$" %))
+         (sort))))
 
 (defn checkout-version
   "Checkout specific git version in repository"

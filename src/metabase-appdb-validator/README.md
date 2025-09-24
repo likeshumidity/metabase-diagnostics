@@ -46,7 +46,6 @@ The tool supports validation against schemas extracted from:
 
 ### Prerequisites
 
-- [Babashka](https://babashka.org/) installed
 - Access to target Metabase application database
 - Clojure/Java environment
 

@@ -11,6 +11,14 @@
 
 (def VERSION "1.0.0")
 
+(defn generate-timestamped-filename
+  "Generate a filename with ISO timestamp (no punctuation/letters)"
+  [base-name extension]
+  (let [now (java.time.Instant/now)
+        formatter (java.time.format.DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
+        timestamp (.format formatter (.atZone now (java.time.ZoneId/systemDefault)))]
+    (str base-name "-" timestamp "." extension)))
+
 (defn print-banner []
   (println "")
   (println "███╗   ███╗███████╗████████╗ █████╗ ██████╗  █████╗ ███████╗███████╗")
@@ -72,16 +80,18 @@
               (printf "✅ Passed: %d, ❌ Failed: %d\n" passed failed)))
 
           ;; Output results
-          (let [output-file (or (:output-file config) "metabase-validation-results.csv")]
+          (let [output-file (or (:output-file config)
+                                (generate-timestamped-filename "metabase-validation-results" "csv"))]
             (csv-output/write-validation-results validation-results output-file)
             (println "📄 Results written to:" output-file)
+            (System/exit 0)
 
-            ;; Return summary for programmatic use
+            ;; Return summary for programmatic use (unreachable but kept for API compatibility)
             {:total-checks (count validation-results)
              :passed-checks (count (filter :check-passed validation-results))
              :failed-checks (count (filter #(not (:check-passed %)) validation-results))
              :output-file output-file
-             :validation-results validation-results}))))
+             :validation-results validation-results})))
 
     (catch Exception e
       (println "❌ Validation failed with error:")
@@ -113,7 +123,8 @@
             (printf "  ✅ %d tables extracted\n" (count (:tables schema))))))
 
       (when (:verbose config)
-        (println "✅ Schema extraction completed for" (count versions) "versions")))
+        (println "✅ Schema extraction completed for" (count versions) "versions"))
+      (System/exit 0))
 
     (catch Exception e
       (println "❌ Schema extraction failed:")
@@ -122,23 +133,66 @@
         (.printStackTrace e))
       (System/exit 1))))
 
+(defn sort-versions
+  "Sort versions by license, major, minor, patch in descending order"
+  [versions]
+  (let [four-part-pattern #"^v(\d+)\.(\d+)\.(\d+)\.(\d+)$"
+        three-part-pattern #"^v(\d+)\.(\d+)\.(\d+)$"
+        parse-version (fn [version]
+                        (cond
+                          ;; Try 4-part version first (license.major.minor.patch)
+                          (re-matches four-part-pattern version)
+                          (let [match (re-matches four-part-pattern version)]
+                            {:version version
+                             :license (Integer/parseInt (nth match 1))
+                             :major (Integer/parseInt (nth match 2))
+                             :minor (Integer/parseInt (nth match 3))
+                             :patch (Integer/parseInt (nth match 4))})
+
+                          ;; Try 3-part version (major.minor.patch, treat as license=0)
+                          (re-matches three-part-pattern version)
+                          (let [match (re-matches three-part-pattern version)]
+                            {:version version
+                             :license (Integer/parseInt (nth match 1))
+                             :major (Integer/parseInt (nth match 2))
+                             :minor (Integer/parseInt (nth match 3))
+                             :patch 0})
+
+                          ;; Return nil for unrecognized formats
+                          :else nil))
+
+        parsed-versions (->> versions
+                            (map parse-version)
+                            (filter some?))]
+
+    (->> parsed-versions
+         (sort-by (juxt :license :major :minor :patch))
+         (reverse)
+         (map :version))))
+
+(defn get-all-version-tags
+  "Get all version tags that start with v0 or v1 and end with a digit"
+  [repo-path]
+  (let [all-tags (schema-extractor/get-git-tags repo-path)]
+    (->> all-tags
+         (filter #(re-matches #"^v[01].*\d$" %))
+         (sort))))
+
 (defn list-versions
   "List all available Metabase versions for schema extraction"
   [config]
   (try
-    (let [versions (schema-extractor/list-supported-versions
-                     (:metabase-repo-path config "/Users/jacobjoseph/dev/metabase/metabase"))]
+    (let [versions (get-all-version-tags
+                     (:metabase-repo-path config "/Users/jacobjoseph/dev/metabase/metabase"))
+          sorted-versions (sort-versions versions)]
+
       (println "📋 Available Metabase versions for schema validation:")
       (println "")
-      (println "Major Version Initials:")
-      (doseq [version (filter #(re-matches #"v\d+\.\d+\.0" %) versions)]
+      (doseq [version sorted-versions]
         (println "  " version))
       (println "")
-      (println "Latest Patch Versions:")
-      (doseq [version (remove #(re-matches #"v\d+\.\d+\.0" %) versions)]
-        (println "  " version))
-      (println "")
-      (printf "Total: %d versions supported\n" (count versions)))
+      (printf "Total: %d versions supported\n" (count versions))
+      (System/exit 0))
 
     (catch Exception e
       (println "❌ Failed to list versions:")
@@ -154,6 +208,39 @@
       (:help options)
       (do
         (print-banner)
+        (println "Available commands:")
+        (println "  validate        - Validate a Metabase application database")
+        (println "  extract-schemas - Extract schemas from Metabase versions")
+        (println "  list-versions   - List available Metabase versions")
+        (println "")
+        (println "Usage Examples:")
+        (println "")
+        (println "  # Validate database with all options:")
+        (println "  ./metabase-appdb-validator validate \\")
+        (println "    --db-host localhost \\")
+        (println "    --db-port 5432 \\")
+        (println "    --db-name metabase \\")
+        (println "    --db-user metabase \\")
+        (println "    --db-password secret \\")
+        (println "    --metabase-version v0.55.15 \\")
+        (println "    --metabase-repo-path /path/to/metabase \\")
+        (println "    --scope structural,business-rules,data-integrity \\")
+        (println "    --output my-validation-results.csv \\")
+        (println "    --config config.edn \\")
+        (println "    --verbose")
+        (println "")
+        (println "  # Extract schemas with all options:")
+        (println "  ./metabase-appdb-validator extract-schemas \\")
+        (println "    --metabase-repo-path /path/to/metabase \\")
+        (println "    --metabase-version v0.55.15 \\")
+        (println "    --verbose")
+        (println "")
+        (println "  # List versions with all options:")
+        (println "  ./metabase-appdb-validator list-versions \\")
+        (println "    --metabase-repo-path /path/to/metabase \\")
+        (println "    --verbose")
+        (println "")
+        (println "Options:")
         (println summary)
         (System/exit 0))
 
