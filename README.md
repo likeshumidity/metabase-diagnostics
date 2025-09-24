@@ -54,13 +54,24 @@ export METABASE_URL="http://localhost:3000"
 export METABASE_API_KEY="mb_your_api_key_here"
 ```
 
-## Building Uberjar
+## Building and Running Uberjar
+
+### Building Uberjar
 
 ```bash
 clojure -X:build uber
 ```
 
 Builds uberjar in `target/` path.
+
+### Running Uberjar
+
+```bash
+java -jar target/metabase-diagnostics-x.x.x-standalone.jar
+```
+
+Replace `x.x.x` with the version number.
+
 
 ## Usage
 
