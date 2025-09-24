@@ -5,28 +5,22 @@ This file serves as a persistent TODO list for diagnostic tools and investigatio
 ## Active TODOs
 
 ### High Priority
-- [ ] Build Babashka-based container health checker for Docker environment
-- [ ] Investigate MailDev unhealthy status in current Docker setup
-- [ ] Create version comparison tool for v1.55.12 vs v1.56.2.4 Metabase instances
+- [ ] Build Clojure CLI container diagnostic checker for Metabase Application Database accessed via Metabase API
 
 ### Development Infrastructure
-- [ ] Set up Babashka project structure with deps.edn
-- [ ] Create CLI framework with commands/subcommands/flags/options
-- [ ] Establish boilerplate for Clojure diagnostic library
+- [ ] Set up Clojure CLI project structure with deps.edn
+- [ ] Create CLI framework with commands/subcommands/flags/options/arguments
+- [ ] Establish boilerplate for Clojure diagnostic library with an example module
 
 ### Diagnostic Tools Ideas
-- [ ] PostgreSQL connection and performance analyzer
-- [ ] Metabase API health checker across multiple instances
-- [ ] Query performance comparison tool
-- [ ] Resource utilization monitor (JVM heap, connection pools)
-- [ ] Log aggregation and analysis tool
-- [ ] Database schema validation checker
+- [ ] trace dependencies in Dashboards, Questions, and Models
+- [ ] heuristically inspect and determine JSON schema for Dashboards, Questions, and Models
 
 ### Later/Research Items
-- [ ] Prometheus/Grafana integration patterns for Metabase metrics
-- [ ] OpenTelemetry distributed tracing setup
-- [ ] Multi-tenant diagnostic isolation patterns
-- [ ] Event-driven diagnostic system architecture
+- [ ] Query Log performance comparison tool
+- [ ] Log aggregation and analysis tool
+- [ ] Generate and validate log4j2.xml configurations
+- [ ] Database schema validation checker (entire schema including JSON objects)
 
 ---
 
