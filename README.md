@@ -1,133 +1,261 @@
-# metabase-diagnostics
-Diagnostic Tools for Troubleshooting Metabase
+# Metabase Diagnostics
 
-## Plan for @claude
-- [ ] 1. Update the metabase-diagnostics/README.md with our specific goals and progress
-- [ ] 2. Create diagnostic tool templates that I can reference and build upon
-- [ ] 3. Document common troubleshooting patterns you encounter
-- [ ] 4. Maintain a running TODO in the diagnostics directory for our ongoing work
+A comprehensive suite of diagnostic tools for troubleshooting Metabase instances, built with Clojure.
 
-## Tooling ideas for @claude
-  For Metabase Diagnostics & Troubleshooting
+## Overview
 
-  Clojure/LISP Best Practices:
-  - Babashka for fast CLI tools (already noted in your project) - excellent for system diagnostics
-  - REPL-driven development for interactive troubleshooting sessions
-  - Spec/Malli for data validation in diagnostic tools
-  - Component/Mount for stateful diagnostic services
-  - Timbre/tools.logging for structured diagnostic logging
+Metabase Diagnostics provides a CLI framework for running various diagnostic checks against Metabase installations. The tool uses a modular architecture with shared libraries for common functionality like API client, logging, and output formatting.
 
-  Data Infrastructure Diagnostics:
-  - Query performance analysis - connection pooling, query plan analysis
-  - Connection health monitoring - database driver diagnostics
-  - Data pipeline observability - sync job monitoring, transformation validation
-  - Cache effectiveness - Redis/in-memory cache hit rates
+## Architecture
 
-  Cloud Infrastructure Monitoring:
-  - Prometheus/Grafana integration for Metabase metrics
-  - OpenTelemetry for distributed tracing across services
-  - Health check endpoints for orchestration platforms
-  - Resource utilization tracking (JVM heap, connection pools)
+- **Clojure-based CLI**: Uses `tools.cli` for argument parsing and command orchestration
+- **Monorepo Structure**: Shared libraries and individual diagnostic tools
+- **API Key Authentication**: Secure connection to Metabase instances via X-API-Key header
+- **Multiple Output Formats**: JSON, EDN, table, CSV, and summary formats
+- **Structured Logging**: Context-aware logging with configurable levels
 
-  Architectural Approaches Recommend
+## Installation
 
-  Pre-Scale (Startup/Small Team):
-  - Simple, composable tools over complex frameworks
-  - File-based configuration and state when possible
-  - Direct database queries for diagnostics
-  - Monolithic diagnostic tool with clear separation of concerns
+### Prerequisites
 
-  At Scale (Enterprise/High Volume):
-  - Event-driven diagnostic systems
-  - Distributed tracing and observability
-  - Infrastructure as Code for consistent environments
-  - Multi-tenant diagnostic isolation
+- Java 11 or higher
+- Clojure CLI tools (`clojure` command)
 
-  Data Engineering Paradigms to Apply
+### Setup
 
-  - Functional data transformations over imperative scripts
-  - Schema-first diagnostic data models
-  - Immutable data structures for reliable analysis
-  - Stream processing for real-time diagnostics where needed
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd metabase-diagnostics
+   ```
 
-  When asked questions or make requests:
-  1. Identify the scale/context you're operating in
-  2. Recommend appropriate tools from the Clojure/data ecosystem
-  3. Suggest architectural patterns that fit your constraints
-  4. Provide concrete implementation approaches with code examples
-  5. Consider operational concerns (monitoring, deployment, maintenance)
+2. **Verify installation:**
+   ```bash
+   clojure -M -m metabase-diagnostics.cli --version
+   ```
 
+## Configuration
 
-## MCP Servers TODO
+### Metabase API Key
 
-### Slack MCP Server
-- [ ] Add Slack MCP server to Claude Code
-  - **Official MCP**: [korotovsky/slack-mcp-server](https://github.com/korotovsky/slack-mcp-server)
-  - **Claude Code Example**: [How to Use Slack MCP Server](https://apidog.com/blog/slack-mcp-server/)
-  - **Capabilities**: Send messages, manage channels, access workspace history, add reactions, reply to threads, retrieve user profiles. Supports stealth mode (no permissions), OAuth authentication, enterprise workspaces, and batch processing up to 50 messages.
+To use the diagnostic tools, you'll need a Metabase API key:
 
-### Linear MCP Server
-- [ ] Add Linear MCP server to Claude Code
-  - **Official MCP**: [Linear Official MCP Server](https://linear.app/docs/mcp)
-  - **Claude Code Example**: [Setup Linear MCP in Claude Code](https://composio.dev/blog/how-to-set-up-linear-mcp-in-claude-code-to-automate-issue-tracking)
-  - **Capabilities**: Create, update, delete issues and subissues, advanced search with filters, project management, team and label management, comment handling with markdown support. Uses OAuth 2.1 authentication with SSE/HTTP transports.
+1. **Log into your Metabase instance as an admin**
+2. **Go to Admin Settings > API Keys**
+3. **Create a new API key** with appropriate permissions
+4. **Copy the generated API key** (starts with `mb_`)
 
-### GitHub MCP Server
-- [ ] Add GitHub MCP server to Claude Code
-  - **Official MCP**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
-  - **Claude Code Example**: [GitHub MCP Server Guide](https://github.blog/ai-and-ml/generative-ai/a-practical-guide-on-how-to-use-the-github-mcp-server/)
-  - **Capabilities**: Repository management, browse/query code, search files, analyze commits, issue & PR automation, CI/CD workflow intelligence, code analysis, security findings review. Supports OAuth authentication with remote hosting.
+### Environment Variables (Optional)
 
-### Gmail MCP Server
-- [ ] Add Gmail MCP server to Claude Code
-  - **Official MCP**: [GongRzhe/Gmail-MCP-Server](https://github.com/GongRzhe/Gmail-MCP-Server)
-  - **Claude Code Example**: [Create Gmail Agent with MCP](https://medium.com/@jason.summer/create-a-gmail-agent-with-model-context-protocol-mcp-061059c07777)
-  - **Capabilities**: Send emails with attachments, label management, batch processing up to 50 emails, search/read/delete emails, draft management, multi-account support. Requires Google Cloud Project with Gmail API and OAuth2 credentials.
+You can set default values using environment variables:
 
-### Google Calendar MCP Server
-- [ ] Add Google Calendar MCP server to Claude Code
-  - **Official MCP**: [nspady/google-calendar-mcp](https://github.com/nspady/google-calendar-mcp)
-  - **Claude Code Example**: [Google Calendar MCP Integration](https://n8n.io/workflows/3569-build-an-mcp-server-with-google-calendar/)
-  - **Capabilities**: Multi-calendar support, create/update/delete events, recurring events, free/busy queries, smart scheduling with natural language, conflict detection, timezone support. Installation via `npx @cocal/google-calendar-mcp`.
+```bash
+export METABASE_URL="http://localhost:3000"
+export METABASE_API_KEY="mb_your_api_key_here"
+```
 
-### Metabase Website MCP Server
-- [ ] Add Metabase MCP server to Claude Code
-  - **Official MCP**: [hyeongjun-dev/metabase-mcp-server](https://github.com/hyeongjun-dev/metabase-mcp-server)
-  - **Claude Code Example**: [Metabase MCP Server](https://mcpmarket.com/server/metabase-1)
-  - **Capabilities**: Access dashboards, questions/cards, databases as resources, execute queries, manage collections, comprehensive logging, support for session-based and API key authentication. Provides 70+ ready-to-use tools for analytics and BI.
+## Usage
 
-### Grain MCP Server
-- [ ] Add Grain MCP server to Claude Code
-  - **Official MCP**: [Grain MCP Server](https://mcp.pipedream.com/app/grain)
-  - **Claude Code Example**: [Weekly Pulse: Screen Recording](https://www.pulsemcp.com/posts/newsletter-remote-mcp-images-screen-recording)
-  - **Capabilities**: Meeting recording with automated note-taking, transcript generation, intelligence notes, integration with Slack/HubSpot, customizable recording views (speaker-only or all participants), screen sharing modes (overlap/side-by-side).
+### Basic Command Structure
 
-### Docker MCP Server
-- [ ] Add Docker MCP server to Claude Code
-  - **Official MCP**: [Docker Hub MCP Server](https://www.docker.com/blog/introducing-docker-hub-mcp-server/)
-  - **Claude Code Example**: [Build MCP Servers with Docker](https://www.docker.com/blog/build-to-prod-mcp-servers-with-docker/)
-  - **Capabilities**: Container management with natural language, Docker Hub API integration, secure sandboxed isolation, digitally signed images, one-click setup for popular clients. Supports Docker Desktop integration and containerized MCP server deployment.
+```bash
+clojure -M -m metabase-diagnostics.cli [global-options] <command> [command-options]
+```
 
-### Postgres MCP Server
-- [ ] Add Postgres MCP server to Claude Code
-  - **Official MCP**: [crystaldba/postgres-mcp](https://github.com/crystaldba/postgres-mcp)
-  - **Claude Code Example**: [MCP with Postgres](https://punits.dev/blog/mcp-with-postgres/)
-  - **Capabilities**: Read/write database access, schema inspection, performance analysis, workload analysis, query optimization recommendations, health checks (buffer cache, connections, constraints), execution plan analysis. Professional version includes transaction management.
+### Global Options
 
-### MongoDB MCP Server
-- [ ] Add MongoDB MCP server to Claude Code
-  - **Official MCP**: [MongoDB Lens MCP Server](https://mcpservers.org/)
-  - **Claude Code Example**: [Awesome MCP Servers](https://github.com/wong2/awesome-mcp-servers)
-  - **Capabilities**: Full-featured MongoDB database integration, collection querying and analysis, document management, aggregation pipeline support, schema inspection, index management. Multiple implementations available for different use cases.
+- `-h, --help` - Show help
+- `-v, --version` - Show version
+- `-V, --verbose` - Enable verbose logging
+- `--log-level LEVEL` - Set log level (trace|debug|info|warn|error)
+- `--format FORMAT` - Output format (json|edn|table|csv|summary)
+- `-q, --quiet` - Suppress non-essential output
 
-### Pylon MCP Server
-- [ ] Add Pylon MCP server to Claude Code
-  - **Official MCP**: [Zapier Pylon MCP](https://zapier.com/mcp/pylon-1)
-  - **Claude Code Example**: [Pylon Integrations](https://usepylon.com/integrations)
-  - **Capabilities**: Data integration analytics, support workflow automation, Slack/Teams/email/CRM/ticketing integration, data warehouse sync (Snowflake, BigQuery), real-time analytics, seamless multi-tool connectivity. Free up to 300 tool calls per month.
+### Available Commands
 
-## TODO
-- [ ] create babashka starter based on deps.edn
-- [ ] babashka CLI for Clojure library with commands and subcommands flags and options and arguments
-- [ ] boilerplate for Clojure library
+#### API Diagnostics
 
+Check Metabase instance health via API:
+
+```bash
+# Basic usage
+clojure -M -m metabase-diagnostics.cli api-diagnostics \
+  --base-url http://localhost:3000 \
+  --api-key mb_your_api_key_here
+
+# With custom options
+clojure -M -m metabase-diagnostics.cli \
+  --format json \
+  --log-level warn \
+  api-diagnostics \
+  --base-url http://localhost:3000 \
+  --api-key mb_your_api_key_here \
+  --timeout 60 \
+  --retries 5 \
+  --no-check-databases
+```
+
+**API Diagnostics Options:**
+- `-u, --base-url URL` - Metabase base URL (required)
+- `-k, --api-key KEY` - Metabase API key (required)
+- `--timeout SECONDS` - Request timeout (default: 30)
+- `--retries COUNT` - Number of retries (default: 3)
+- `--[no-]check-health` - Check instance health (default: true)
+- `--[no-]check-databases` - Check database connectivity (default: true)
+- `--[no-]check-collections` - Check collections access (default: true)
+
+## Examples
+
+### Quick Health Check
+
+```bash
+# JSON output for easy parsing
+clojure -M -m metabase-diagnostics.cli --format json api-diagnostics \
+  -u http://localhost:3000 \
+  -k mb_cSlhxr3qVOTJJlI4mX33f27JFFcQNmW1hEN13Zn8euw=
+```
+
+### Verbose Debugging
+
+```bash
+# Enable verbose logging for troubleshooting
+clojure -M -m metabase-diagnostics.cli --verbose api-diagnostics \
+  -u http://localhost:3000 \
+  -k mb_your_api_key_here
+```
+
+### Quiet Monitoring
+
+```bash
+# Minimal output for monitoring scripts
+clojure -M -m metabase-diagnostics.cli --quiet --format json api-diagnostics \
+  -u http://localhost:3000 \
+  -k mb_your_api_key_here 2>/dev/null
+```
+
+## Output Formats
+
+### Summary (Default)
+Human-readable summary format:
+```
+Summary:
+  total-tests: 4
+  passed-tests: 4
+  failed-tests: 0
+  success: true
+```
+
+### JSON
+Machine-readable JSON format:
+```json
+{
+  "summary": {
+    "total-tests": 4,
+    "passed-tests": 4,
+    "failed-tests": 0,
+    "success": true
+  },
+  "results": [...]
+}
+```
+
+### EDN
+Clojure data format:
+```clojure
+{:summary {:total-tests 4 :passed-tests 4 :failed-tests 0 :success true}
+ :results [...]}
+```
+
+## Development
+
+### Project Structure
+
+```
+metabase-diagnostics/
+├── deps.edn                 # Root project dependencies
+├── shared/                  # Shared libraries
+│   └── src/metabase_diagnostics/
+│       ├── api/
+│       │   └── client.clj   # API client library
+│       ├── logging/
+│       │   └── core.clj     # Logging utilities
+│       └── output/
+│           └── formatter.clj # Output formatting
+└── tools/                   # Diagnostic tools
+    └── src/metabase_diagnostics/
+        ├── cli.clj          # Main CLI orchestrator
+        └── tools/
+            └── api_diagnostics.clj # API diagnostic tool
+```
+
+### Adding New Diagnostic Tools
+
+1. **Create tool module** in `tools/src/metabase_diagnostics/tools/`
+2. **Implement required functions:**
+   - `show-help` - Display tool-specific help
+   - `run-validation` - Main entry point matching CLI interface
+3. **Register tool** in `cli.clj` `AVAILABLE_TOOLS` registry
+4. **Follow shared patterns** for option parsing and output formatting
+
+### Example Tool Template
+
+```clojure
+(ns metabase-diagnostics.tools.my-tool
+  (:require [clojure.tools.cli :as cli]))
+
+(def TOOL_OPTIONS
+  [["-h" "--help" "Show help for my-tool"]
+   ["-u" "--base-url URL" "Metabase base URL" :required true]])
+
+(defn show-help []
+  (println "My Tool - Description of what this tool does"))
+
+(defn run-validation [{:keys [tool-args global-options]}]
+  (let [parsed (cli/parse-opts tool-args TOOL_OPTIONS)
+        opts (:options parsed)]
+    (if (:help opts)
+      (do (show-help) {:action :help-shown})
+      ;; Implement tool logic here
+      {:summary {:success true} :results []})))
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Unknown tool" error**: Verify tool is registered in `AVAILABLE_TOOLS`
+2. **API authentication errors**: Check API key permissions and format
+3. **Connection timeouts**: Increase `--timeout` value or check network connectivity
+4. **JSON parsing errors**: Verify Metabase instance is returning valid JSON responses
+
+### Debug Mode
+
+Enable verbose logging to see detailed API calls and internal operations:
+
+```bash
+clojure -M -m metabase-diagnostics.cli --verbose --log-level debug api-diagnostics [options]
+```
+
+## Contributing
+
+### Development Setup
+
+1. Clone repository
+2. Run `clojure -X:dev` to start REPL
+3. Make changes and test with `clojure -M -m metabase-diagnostics.cli --help`
+
+### Code Style
+
+- Follow Clojure conventions
+- Extract constants using ALL_CAPS_WITH_UNDERSCORES
+- Use tools.cli for argument parsing
+- Return structured data from diagnostic functions
+- Include proper error handling and logging
+
+## License
+
+[Add appropriate license information]
+
+## Support
+
+For issues and feature requests, please [create an issue](link-to-issues) or consult the troubleshooting section above.
