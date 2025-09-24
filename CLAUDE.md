@@ -4,17 +4,9 @@ This file serves as a persistent TODO list for diagnostic tools and investigatio
 
 ## Active TODOs
 
-### High Priority
-- [ ] Build Clojure CLI container diagnostic checker for Metabase Application Database accessed via Metabase API
-
-### Development Infrastructure
-- [ ] Set up Clojure CLI project structure with deps.edn
-- [ ] Create CLI framework with commands/subcommands/flags/options/arguments
-- [ ] Establish boilerplate for Clojure diagnostic library with an example module
-
 ### Diagnostic Tools Ideas
-- [ ] trace dependencies in Dashboards, Questions, and Models
-- [ ] heuristically inspect and determine JSON schema for Dashboards, Questions, and Models
+- [ ] trace-dependences: trace dependencies in Dashboards, Questions, and Models
+- [ ] extract-schemas: heuristically inspect and determine JSON schema for Dashboards, Questions, and Models
 
 ### Later/Research Items
 - [ ] Query Log performance comparison tool
